@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recently Played Songs</title>
+    <!-- Include the Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fontsource-circular-std@3.0.0-alpha.50/css/circular.css">
+    <style>
+        /* Center the title and pie chart on the page vertically and horizontally */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh; /* Set a minimum height for the page */
+            align-items: center;
+            margin: 0;
+            font-family: 'Circular', sans-serif;
+        }
+
+        h1 {
+            margin-bottom: 10px; /* Add some spacing between the title and pie chart */
+            margin-top: 5px;
+        }
+
+        /* Style for the pie chart container */
+        .chart-container {
+            width: 80%; /* Adjust the width as needed */
+            max-width: 600px; /* Set a maximum width for responsiveness */
+            text-align: center; /* Center the chart */
+            margin-bottom: 20px; /* Add spacing between the charts */
+        }
+    </style>
+</head>
+<body>
+    <h1>This week's Spotify Listening Data</h1>
+    <p>Week start: {{ start_date.strftime('%Y-%m-%d') }}</p>
+    <!-- Create a placeholder for the pie chart -->
+    <div class="chart-container">
+        <canvas id="myPieChart"></canvas>
+    </div>
+
+    <!-- Create a placeholder for the time distribution chart -->
+    <div class="chart-container" style="height: 200px">
+        <canvas id="timeDistributionChart"></canvas>
+    </div>
+
+    <!-- Create a placeholder for the genre distribution chart -->
+    <div class="chart-container" style="height: 1000px">
+        <canvas id="genreDistributionChart"></canvas>
+    </div>
+
+    <!-- JavaScript code to create the pie chart with dynamically generated colors -->
+    <script>
+        var ctx = document.getElementById('myPieChart').getContext('2d');
+        var artistData = {{ artist_data|tojson }};
+        var artistNames = artistData.map(function(artist) { return artist.artist; });
+        var uniqueColors = generateUniqueColors(artistNames.length);
+
+        var myPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: artistNames,
+                datasets: [{
+                    data: artistData.map(function(artist) { return artist.songs.length; }),
+                    backgroundColor: uniqueColors,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                legend: {
+                    position: 'bottom',
+                },
+            }
+        });
+
+        function generateUniqueColors(count) {
+            var colors = [];
+            for (var i = 0; i < count; i++) {
+                var hue = (i * 360) / count;
+                colors.push('hsla(' + hue + ', 70%, 60%, 0.7)');
+            }
+            return colors;
+        }
+    </script>
+
+    <!-- JavaScript code to create the time distribution chart -->
+    <script>
+        var ctxTimeDistribution = document.getElementById('timeDistributionChart').getContext('2d');
+        var timeDistributionData = {{ time_distribution_data|tojson }};
+        var timeLabels = Array.from({ length: 24 }, (_, i) => i.toString() + ":00");
+
+        var timeDistributionChart = new Chart(ctxTimeDistribution, {
+            type: 'bar',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Listening Times',
+                    data: timeDistributionData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue color for bars
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hour of the Day'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Songs'
+                        }
+                    }
+                },
+                legend: {
+                    display: false,
+                },
+            }
+        });
+    </script>
+
+    <!-- JavaScript code to create the genre distribution chart -->
+    <script>
+        var ctxGenreDistribution = document.getElementById('genreDistributionChart').getContext('2d');
+        var genreData = {{ genre_data|safe }};
+
+        // Function to count genre occurrences
+        function countGenres(genres) {
+            var genreCounts = {};
+            for (var i = 0; i < genres.length; i++) {
+                for (var j = 0; j < genres[i].length; j++) {
+                    var genre = genres[i][j];
+                    genreCounts[genre] = (genreCounts[genre] || 0) + 1;
+                }
+            }
+            return genreCounts;
+        }
+
+        var genreCounts = countGenres(genreData);
+
+        // Extract unique genre names and corresponding counts
+        var uniqueGenres = Object.keys(genreCounts);
+
+        // Sort uniqueGenres by corresponding counts (genreCounts) in decreasing order
+        uniqueGenres.sort(function(a, b) {
+            return genreCounts[b] - genreCounts[a];
+        });
+
+        // Create an array to store counts in the same order as uniqueGenres
+        var genreCountsData = uniqueGenres.map(function (genre) {
+            return genreCounts[genre];
+        });
+
+        var genreDistributionChart = new Chart(ctxGenreDistribution, {
+            type: 'bar',
+            data: {
+                labels: uniqueGenres,
+                datasets: [{
+                    label: 'Songs per Genre',
+                    data: genreCountsData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)', // Teal color for bars
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Songs'
+                        },
+                        ticks: {
+                            autoSkip: false, // Prevent automatic label skipping
+                            maxRotation: 90, // Rotate label to be vertical
+                            minRotation: 90
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Genres'
+                        }
+                    }
+                },
+                legend: {
+                    display: true
+                },
+            }
+        });
+    </script>
+
+
+
+</body>
+</html>
