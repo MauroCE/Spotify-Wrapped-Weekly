@@ -1,5 +1,5 @@
-# Spotify-Wrapped-Weekly
-Using Python to grab recently played songs from Spotify API and chart.js to display a SpotifyWrapped.
+# Spotify Wrapped Weekly
+Using Python to grab recently played songs from Spotify API and Charts.js to display a SpotifyWrapped.
 
 # How to use this code
 For this repository to work, obtain `CLIENT_ID` and `CLIENT_SECRET` from [Spotify for Developers](https://developer.spotify.com/) and create a `.env` file with 
