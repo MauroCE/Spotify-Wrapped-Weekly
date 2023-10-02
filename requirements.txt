@@ -16,3 +16,9 @@ python-dotenv
 requests
 urllib3
 Werkzeug
+flask-caching
+numpy
+pytz
+tzlocal
+pendulum
+pandas

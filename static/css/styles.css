@@ -1,0 +1,399 @@
+/* Define Spotify's green color */
+html {
+  overflow-x: hidden;
+  margin-right: calc(-1 * (100vw - 100%));
+}
+
+.spotify-green {
+    color: #1DB954;
+}
+
+.main-title {
+    color: #1DB954;
+    font-weight: bold;
+    /*align-text: center;*/
+    /* align-item: center; */
+    /* margin: 0 20px; */
+    margin: 0 auto;
+    /*margin-left: 60px;*/
+    display: flex;
+    text-align: center;
+    font-family: 'Gotham', sans-serif;
+    font-size: 35px;
+    /*font-family: 'Gotham', sans-serif; */
+}
+
+/* Style for the "Spotify" portion */
+.bold-text {
+    font-weight: 425;
+    color: #1DB954; /* Set the color for "Spotify" if needed */
+}
+
+/* Header styles */
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 0;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Center the title and pie chart on the page vertically and horizontally */
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh; /* Set a minimum height for the page */
+    align-items: center;
+    margin: 0;
+    font-family: 'Circular', sans-serif;
+    /*background: #E2E2E2;*/
+    background-color: #f3f3f3; /* Set a light background color */
+/*    background-image:
+      repeating-radial-gradient(circle at 0 0, transparent 0, #e0f0e0 10px), *//* Light green for inner color *//*
+      repeating-linear-gradient(#d6d6d6, #d6d6d6); *//* Light gray gradient *//*
+    opacity: 1.0;*/
+    background-image: radial-gradient(circle at center center, #f5f5f5, #f5f5f5), repeating-radial-gradient(circle at center center, #f5f5f5, #f5f5f5 10px, transparent 20px, transparent 10px);
+    background-blend-mode: multiply;
+    background-attachment: fixed; /* Keep the background fixed while scrolling */
+}
+
+h1 {
+    margin-bottom: 10px; /* Add some spacing between the title and pie chart */
+    margin-top: 5px;
+}
+
+/* Style for the pie chart container */
+.chart-container {
+    width: 80%; /* Adjust the width as needed */
+    max-width: 600px; /* Set a maximum width for responsiveness */
+    text-align: center; /* Center the chart */
+    margin-bottom: 20px; /* Add spacing between the charts */
+}
+
+
+/* Updated CSS for the top artists section */
+.top-artists {
+    text-align: center;
+    /* margin-top: 30px; */
+    display: flex; /* Add flex display to the container */
+    flex-wrap: wrap; /* Allow cards to wrap to the next row on small screens */
+    justify-content: center; /* Center the cards horizontally */
+}
+
+/* Updated style for each artist card */
+.artist-card {
+    display: inline-block;
+    margin: 20px;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+    flex: 1; /* Add flex property to make cards have equal width */
+}
+
+.artist-card:hover {
+    transform: scale(1.05);
+}
+
+.artist-image img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #1DB954;
+}
+
+.artist-info h3 {
+    margin: 10px 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.artist-info .song-count {
+    margin: 0;
+    font-size: 14px;
+    color: #1DB954; /* Spotify's green color */
+}
+
+/* Style for the artist rank */
+.artist-rank {
+    font-size: 20px; /* Adjust the font size as needed */
+    font-family: 'Gotham', sans-serif; /* Use the Gotham font */
+    color: #1DB954; /* Use the Spotify green color or a similar shade */
+    /*margin-right: 10px; /* Add some spacing between the rank and image */
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Style for the artist name */
+.artist-name {
+    font-size: 18px; /* Adjust the font size as needed */
+    font-family: 'Gotham', sans-serif; /* Use the Gotham font */
+    color: #000; /* Use a suitable text color */
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.top-artists-container {
+    text-align: center; /* Center its contents horizontally */
+    /* margin-bottom: 30px; */
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.stats-container {
+    text-align: center; /* Center its contents horizontally */
+    width: 40%
+}
+
+.stats-card {
+    background-color: #333;
+    border-radius: 10px;
+    padding: 20px;
+    color: white;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+    text-align: center;
+    width: 70%;
+    margin: 0 auto; /* Center the card horizontally */
+}
+
+.stats-card:hover {
+    transform: scale(1.05);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+.stat-label {
+    font-size: 15px;
+    font-family: 'Gotham', sans-serif;
+    margin-bottom: 5px;
+    margin-top: 10px;
+}
+
+.stat-value {
+    font-weight: 1000;
+    font-size: 50px;
+    font-family: 'Gotham', sans-serif;
+    color: #1DB954;
+}
+
+/*.stat-item:first-child {
+    margin-bottom: 20px; *//* Add margin only for the first stat pair *//*
+}
+
+.stat-item:second-child {
+    margin-bottom: 20px; *//* Add margin only for the first stat pair *//*
+}
+
+.stat-item:third-child {
+    margin-top: 20px; *//* Add margin only for the first stat pair *//*
+}*/
+
+.genre-name {
+    flex-grow: 1; /* Allow the artist name to expand and fill remaining space */
+    font-size: 20px; /* Adjust font size as needed */
+    font-family: 'Gotham', sans-serif; /* Use the desired font */
+    color: #FFFFFF; /* Use a suitable text color */
+    font-weight: bold;
+    word-wrap: break-word;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+.top-genres {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    justify-content: center;
+    row-gap: 0%;
+    column-gap: 10%;
+    width: 90%;
+    margin: 0 auto; /* Center the grid horizontally */
+    padding: 0 10px; /* Add padding to the left and right */
+}
+
+.genre-rank {
+    font-size: 20px; /* Adjust the font size as needed */
+    font-family: 'Gotham', sans-serif; /* Use the Gotham font */
+    color: #1DB954; /* Use the Spotify green color or a similar shade */
+    /*margin-right: 10px; /* Add some spacing between the rank and image */
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+.genre-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    /* margin: 0 auto; /* Center the container horizontally */
+    /*padding: 0 10px; /* Add padding to the left and right */
+}
+
+/* Footer */
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    width: 100%;
+    flex-direction: row;
+    font-family: 'Gotham', sans-serif;
+}
+
+.social-links a {
+    color: #1DB954;
+    text-decoration: none;
+    margin: 10px 20px;
+    font-size: 24px;
+}
+
+/* GitHub Link */
+.github-link {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 10px;
+    font-size: 24px;
+    transition: color 0.3s;
+}
+
+.github-link:hover {
+    color: #1DB954; /* Spotify green */
+}
+
+.section-title {
+    display: block;
+    font-family: 'Gotham', sans-serif;
+    margin-bottom: 0px;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(45deg, #333, #000); /* Gradient background */
+    -webkit-background-clip: text; /* Clip text to background */
+    background-clip: text;
+    -webkit-text-fill-color: transparent; /* Hide text fill to show gradient */
+}
+
+
+@media (max-width: 500px) { /* 500 should be enough for mobile */
+    body {
+        overflow-x: hidden;
+        width: 100%;
+        -webkit-box-sizing: border-box;
+           -moz-box-sizing: border-box;
+                box-sizing: border-box;
+    }
+    html {
+      overflow-x: hidden;
+    }
+
+    .stats-container {
+        text-align: center; /* Center its contents horizontally */
+        width: 100%;
+    }
+    .stat-label {
+        font-size: 20px; /* Adjust the font size as needed for better visibility */
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .stats-card{
+        flex-direction: column;
+        height: max-content;
+    }
+    header {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    footer {
+        flex-direction: column;
+    }
+
+    /* Style for the header title on mobile */
+    h1 {
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 0;
+        font-size: 20px; /* Adjust font size for mobile */
+    }
+
+    .top-artists {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        justify-content: center;
+        row-gap: 0%;
+        column-gap: 10%;
+    }
+    .artist-card {
+        /*margin: 10px 0; /* Add some spacing between the stacked cards */
+        margin: 5% 0;
+        display: block /* Use flex layout for consistent card widths */
+        /* width: max-content; /* Adjust card width to fit the content (longest artist name) */ */
+        justify-content: space-evenly; /* Space items horizontally within the card */
+        width: 90%
+    }
+    .artist-image {
+        flex: 0 0 100px; /* Fixed width for the artist image */
+        /* margin-right: 10px; /* Add spacing between image and name */
+    }
+    .artist-name {
+        flex-grow: 1; /* Allow the artist name to expand and fill remaining space */
+        font-size: 18px; /* Adjust font size as needed */
+        font-family: 'Gotham', sans-serif; /* Use the desired font */
+        color: #000; /* Use a suitable text color */
+        font-weight: bold;
+    }
+    .genre-name {
+        flex-grow: 1; /* Allow the artist name to expand and fill remaining space */
+        font-size: 20px; /* Adjust font size as needed */
+        font-family: 'Gotham', sans-serif; /* Use the desired font */
+        color: #FFFFFF; /* Use a suitable text color */
+        font-weight: bold;
+        word-wrap: break-word;
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    }
+    .top-genres {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        justify-content: center;
+        row-gap: 0%;
+        column-gap: 10%;
+        width: 90%;
+        margin: 0 auto; /* Center the grid horizontally */
+        padding: 0 10px; /* Add padding to the left and right */
+    }
+
+    .genre-container {
+        width: 90%;
+        display: flex;
+        justify-content: center;
+        /*margin: 0 auto; /* Center the container horizontally */
+        /*padding: 0 10px; /* Add padding to the left and right */
+        text-align: center;
+    }
+
+    .circular-barplot-container{
+        width: 90%;
+        display: flex;
+        justify-content: center;
+        font-size: 10px;
+    }
+}
+
+
+/* Circular time distribution */
+#timeDistributionChart {
+  transform: rotate(-90deg); /* Rotate the SVG to start from the top */
+}
+.bar {
+  fill: rgba(54, 162, 235, 0.7);
+  stroke: rgba(54, 162, 235, 1);
+  stroke-width: 1;
+}

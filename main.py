@@ -3,7 +3,8 @@ import json
 import base64
 from requests import post, get
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
+import pickle
 
 load_dotenv()
 
@@ -38,7 +39,6 @@ def get_token():
         authorization_url = auth_url + "?" + "&".join([f"{k}={v}" for k, v in auth_params.items()])
 
         print("Please visit the following URL to authorize your application:")
-        print(authorization_url)
 
         # After user authorization, you will receive an authorization code
         authorization_code = input("Enter the authorization code from the URL: ")
@@ -88,63 +88,46 @@ def get_auth_header(token):
     return {"Authorization": "Bearer " + token}
 
 
-def get_recently_played(token, starting_date, limit=50):
-    url = "https://api.spotify.com/v1/me/player/recently-played"
+def get_audio_features(token, track_id):
+    """Retrieve audio features for a track."""
+    url = f"https://api.spotify.com/v1/audio-features/{track_id}"
     headers = get_auth_header(token)
+    result = get(url, headers=headers)
+    return json.loads(result.content)
+
+
+def get_recently_played_with_audio_fearures(token, starting_date, limit=50):
+    """Notice that one cannot specify both after and before.
+    I need a storage system for songs during the week. Spotify only saves the last 50 songs, so I need to make sure
+    that I constantly save songs based on the timestamp of when they were `played_at`. The minimal information I need to
+    store is the song id, artist id, and played_at. With these three information I can then gain access to the artist
+    genres as well as other things, such as mood.
+
+    The way I store this information is crucial because it should allow me to be as efficient as possible with checking
+    if I have downloaded new songs or not. I should check if it is possible to have timestamps as dictionary keys, and
+    importantly I should check that this works as expected using the `datetime` module.
+
+    Seems to be working. Should be enough to store songs in the dictionary based on the played_at value.
+    """
+    # Build the query using fields, limit and after
+    url = "https://api.spotify.com/v1/me/player/recently-played"
     timestamp_ms = int(starting_date.timestamp()) * 1000
     query = f"?limit={limit}&after={timestamp_ms}"
+    query += "&fields=track.id,track.name,track.artists.name,track.artists.id,track.duration_ms,played_at"
+    query_url = url + query
+    # GET request and extract results
+    headers = get_auth_header(token)
+    result = get(query_url, headers=headers)
+    json_result = json.loads(result.content)["items"]
+    # For each result, find audio features
+    
+    recently_played_songs = json_result
 
-    all_recently_played = []
+    print(recently_played_songs[0])
 
-    while True:
-        query_url = url + query
-        result = get(query_url, headers=headers)
-        json_result = json.loads(result.content)["items"]
-        all_recently_played.extend(json_result)
-
-        if len(json_result) < limit:
-            break
-        else:
-            # Update the after timestamp for the next page
-            last_played_item = json_result[-1]
-            timestamp_ms = int(datetime.strptime(
-                last_played_item["played_at"], "%Y-%m-%dT%H:%M:%SZ").timestamp()) * 1000
-            query = f"?limit={limit}&after={timestamp_ms}"
-
-    return all_recently_played
-
-
-# Function to get genre information for a track
-def get_track_genre(access_token, track_id):
-    url = f"https://api.spotify.com/v1/tracks/{track_id}"
-    headers = get_auth_header(access_token)
-    result = get(url, headers=headers)
-    json_result = json.loads(result.content)
-    if "genres" in json_result:
-        return json_result["genres"]
-    else:
-        return []
-
-
-# Function to get genre information for an artist
-def get_artist_genres(access_token, artist_id):
-    url = f"https://api.spotify.com/v1/artists/{artist_id}"
-    headers = get_auth_header(access_token)
-    result = get(url, headers=headers)
-    json_result = json.loads(result.content)
-    if "genres" in json_result:
-        return json_result["genres"]
-    else:
-        return []
+    return recently_played_songs
 
 
 if __name__ == "__main__":
     access_token = get_token()
     start_date = datetime(2023, 9, 17)
-    recently_played = get_recently_played(access_token, start_date)
-
-    # Print the recently played songs
-    for idx, item in enumerate(recently_played):
-        song_name = item["track"]["name"]
-        artist_name = item["track"]["artists"][0]["name"]
-        print(f"{idx + 1}. {song_name} by {artist_name}")
