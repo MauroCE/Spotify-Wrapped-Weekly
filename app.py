@@ -1,35 +1,25 @@
-from flask import Flask, render_template, send_from_directory, url_for
-from main import get_token, get_recently_played_with_audio_fearures, get_auth_header
+from flask import Flask, render_template, send_from_directory
+from main import get_token, get_recently_played_with_audio_features, get_auth_header
 from datetime import datetime, timedelta, date, time
 import os
 import json
 from collections import defaultdict
-from flask_caching import Cache
 from functools import wraps
 from requests import RequestException
 from requests import get
 import pickle
 import numpy as np
 import pytz
-from tzlocal import get_localzone
 import pendulum
 import pandas as pd
 
 
 app = Flask(__name__)
-
-port = int(os.environ.get("PORT", 8000))  # Use 5000 as the default port, 8000 when run locally
-
-# Configure Flask-Caching
-# Configure Flask-Caching with the 'filesystem' cache type and specify the cache directory
-# app.config['CACHE_TYPE'] = 'filesystem'
-# app.config['CACHE_DIR'] = 'cache' #'SpotifyAPI/cache'  # Relative path to the cache directory
-# cache = Cache(app)
-TIMEOUT = 60  # in seconds. Set it to 10 minutes
+port = int(os.environ.get("PORT", 8000))
 
 
-# Decorator to handle API request errors and rate limiting
-def handle_api_errors(func):
+def handle_api_errors(func: callable):
+    """Decorator to handle API request errors and rate limiting."""
     @wraps(func)
     def decorated_function(*args, **kwargs):
         try:
@@ -37,38 +27,36 @@ def handle_api_errors(func):
             return result
         except RequestException as e:
             # Handle network or API rate limit exceeded errors
-            # Implement error handling and retry logic here if needed
             print(f"API Request Error: {e}")
-            return None  # or raise a custom exception
+            return None
 
     return decorated_function
 
 
-# Function to make API requests with error handling and rate limiting
 @handle_api_errors
-def api_get(url, headers=None, params=None):
+def api_get(url: str, headers: dict = None, params: dict = None):
+    """Function to make API requests with error handling and rate limiting."""
     response = get(url, headers=headers, params=params)
     response.raise_for_status()
     return response.json()
 
 
-# Function to get genre information for a track
-#@cache.cached(timeout=TIMEOUT, key_prefix="track_genre")  # Cache the result for one day (adjust as needed)
-@handle_api_errors
-def get_track_genre(access_token, track_id):
-    url = f"https://api.spotify.com/v1/tracks/{track_id}"
-    headers = get_auth_header(access_token)
-    result = api_get(url, headers=headers)
-    if result and "genres" in result:
-        return result["genres"]
-    else:
-        return []
-
-
-# Function to get genre information for an artist
-# @cache.cached(timeout=TIMEOUT, key_prefix="artist_genre")  # Cache the result for one day (adjust as needed)
 @handle_api_errors
 def get_artist_genres(access_token, artist_id):
+    """Get genre information for an artist.
+
+    Parameter
+    ---------
+    :param access_token: Spotify API authorization token.
+    :type access_token: str
+    :param artist_id: ID of artist for which we want to grab genre list.
+    :type artist_id: str
+
+    Return
+    ------
+    :return: List of genres for the artist.
+    :rtype: list
+    """
     url = f"https://api.spotify.com/v1/artists/{artist_id}"
     headers = get_auth_header(access_token)
     result = api_get(url, headers=headers)
@@ -78,9 +66,29 @@ def get_artist_genres(access_token, artist_id):
         return []
 
 
-def group_songs_by_artist(recently_played, access_token, genres_by_artistid, popularity_by_artistid={}):
-    """This function can definitely be improved. I think I just need to avoid repeating artists.
-    Besides, I could just grab the songs genres really."""
+def group_songs_by_artist(recently_played: dict, access_token: str, genres_by_artistid: dict, popularity_by_artistid: dict = {}) -> list:
+    """Constructs a list of dictionaries that group together songs by the same artist so that one can determine
+    the top artists. To avoid sending too many requests to the API, we use stored data about previously-seen
+    artists, such as their genres and their popularity. Although I am currently using the genres of the artist,
+    I should change this and make it the genres of the track itself.
+
+    Parameters
+    ----------
+    :param recently_played: Output of `get_recently_played_with_audio_features` function.
+    :type recently_played: dict
+    :param access_token: Spotify API authorization token.
+    :type access_token: str
+    :param genres_by_artistid: Dictionary having artist id as keys and list of genres as their values. This was created
+    using data that was seen in the past and it is constantly updated.
+    :type genres_by_artistid: dict
+    :param popularity_by_artistid: Dictionary with artist id as key and their popularity as value.
+    :type popularity_by_artistid: dict
+
+    Returns
+    -------
+    :return: List of dictionaries, one per artist, containign their songs, genres and popularity.
+    :rtype: list
+    """
     # Create a dictionary to store songs grouped by artist and their genres
     artist_dict = defaultdict(lambda: {"songs": [], "genres": [], "popularity": 0.0})
 
@@ -88,11 +96,11 @@ def group_songs_by_artist(recently_played, access_token, genres_by_artistid, pop
     new_artist_popularities = {}
 
     for ix, item in enumerate(recently_played):
-        artist_name = item["track"]["artists"][0]["name"] #item["track"]["artists"][0]["name"]
+        artist_name = item["track"]["artists"][0]["name"]
         song_name = item["track"]["name"]
 
         # Retrieve artist details to get genre information
-        artist_id = item["track"]["artists"][0]["id"] #item["track"]["artists"][0]["id"]
+        artist_id = item["track"]["artists"][0]["id"]
         if artist_id in genres_by_artistid.keys() and artist_id in popularity_by_artistid:
             # Grab genres and popularity from stored data
             genres = genres_by_artistid[artist_id]
@@ -125,7 +133,20 @@ def group_songs_by_artist(recently_played, access_token, genres_by_artistid, pop
     return artist_list
 
 
-def calculate_time_distribution(recently_played):
+def calculate_time_distribution(recently_played: dict) -> list:
+    """Generates a list of 24 non-negative integers representing a histogram of the listening time as a function of
+    hour of the day (one item per hour of the day starting from 00:00-01:00 and ending at 23:00-00:00).
+
+    Parameters
+    ----------
+    :param recently_played: Output of `get_recently_played_with_audio_features` function.
+    :type recently_played: dict
+
+    Returns
+    -------
+    :return time distribution: List of frequencies of listening time by the hour.
+    :rtype time_distribution: list
+    """
     # Initialize a list to store the count of songs for each hour of the day
     time_distribution = [0] * 24
 
@@ -137,8 +158,21 @@ def calculate_time_distribution(recently_played):
     return time_distribution
 
 
-def get_top_artists_images(access_token, top_artists_ids):
-    """Grabs images from top artist ids."""
+def get_top_artists_images(access_token: str, top_artists_ids: list) -> list:
+    """Grabs images from top artist ids.
+
+    Parameters
+    ----------
+    :param access_token: Spotify API authorization token.
+    :type access_token: str
+    :param top_artists_ids: List of ids corresponding to top listened artists.
+    :type top_artists_ids: list
+
+    Returns
+    -------
+    :return artist_images: List of URL for fetching artist images.
+    :rtype artist_images: list
+    """
     artist_images = []
     for artist_id in top_artists_ids:
         url = f"https://api.spotify.com/v1/artists/{artist_id}"
@@ -149,6 +183,9 @@ def get_top_artists_images(access_token, top_artists_ids):
 
 
 class NoSongsPlayedThisWeekError(Exception):
+    """Custom Error used when app is being executed but no songs have been playing this week.
+    Currently, I don't do anything when this error happens but in the future I will simply display
+    data from the previous week with a warning."""
     pass
 
 
@@ -199,23 +236,19 @@ def tz_diff(home, away, on=None):
 
 
 @app.route('/')
-#@cache.cached(timeout=TIMEOUT, key_prefix="recently_played")  # Cache the result for one day (adjust as needed)
 def index():
     access_token = get_token()
 
     # Grab recently-played songs from the API
-    # Heroku server: UTC timezone
-    # Spotify played at: UTC timezone
-    # UTC is currently behind by 1 hour wrt UK timezone
-    # UTC is the same as UK timezone. There are multiple things at play.
-    # Spotify records in UTC, which is the same as UK timezone. However, Heroku server is in a different timezone.
+    # Grab correct start date. Importantly, Spotify records in UTC which is the same as UK time zone, but the Heroku
+    # server can be in different timezones when the code is executed. This takes care of it.
     uk_timezone = pytz.timezone('Europe/London')
     today = datetime.now(uk_timezone).date()
     current_week_start = today - timedelta(days=today.weekday())
     start_date = datetime.combine(current_week_start, time.min)  # Monday 00:00. Midnight of Monday of the curr week in the UK
     start_date_utc = start_date + timedelta(hours=tz_diff("Europe/London", "utc"))  # Transform to UTC since this is how played_at is stored in Spotify data
     start_date_utc = start_date_utc.replace(tzinfo=None)
-    recently_played = get_recently_played_with_audio_fearures(access_token, start_date_utc)
+    recently_played = get_recently_played_with_audio_features(access_token, start_date_utc)
 
     # Transform recently-played songs from API into played_at:track dictionary
     api_songs = {item['played_at']: item['track'] for item in recently_played}
