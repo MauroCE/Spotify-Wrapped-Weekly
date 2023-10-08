@@ -3,8 +3,7 @@ import json
 import base64
 from requests import post, get
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
-import pickle
+import datetime
 
 load_dotenv()
 
@@ -15,7 +14,10 @@ refresh_token_file = "refresh_token.txt"  # File to store and retrieve the refre
 
 
 def get_token():
-    """Grabs Access Token"""
+    """Obtains a token using the Authorization Code flow. If a `refresh_token` is available,
+    it will be read and passed to the API. Otherwise, a refresh token will be obtained manually
+    and the user will need to authorize via the link printed to console and then grab the
+    authorization `code` from the redirect URI."""
     token_url = "https://accounts.spotify.com/api/token"
 
     # Check if a refresh token is already stored
@@ -34,7 +36,7 @@ def get_token():
             "client_id": client_id,
             "response_type": "code",
             "redirect_uri": redirect_uri,
-            "scope": "user-read-recently-played",  # Add the required scope
+            "scope": "user-read-recently-played",
         }
         authorization_url = auth_url + "?" + "&".join([f"{k}={v}" for k, v in auth_params.items()])
 
@@ -72,6 +74,7 @@ def get_token():
 
 
 def read_refresh_token():
+    """Reads a refresh token from files, if it exists, or else returns None."""
     try:
         with open(refresh_token_file, "r") as file:
             return file.read().strip()
@@ -79,35 +82,55 @@ def read_refresh_token():
         return None
 
 
-def write_refresh_token(refresh_token):
+def write_refresh_token(refresh_token: str) -> None:
     with open(refresh_token_file, "w") as file:
         file.write(refresh_token)
 
 
-def get_auth_header(token):
+def get_auth_header(token: str) -> dict:
     return {"Authorization": "Bearer " + token}
 
 
-def get_audio_features(token, track_id):
-    """Retrieve audio features for a track."""
+def get_audio_features(token: str, track_id: str) -> dict:
+    """Retrieve audio features for a track, given a token.
+
+    Parameters
+    ----------
+    :param token: Authorization token obtained from Spotify API using `get_token()` above.
+    :type token: str
+    :param track_id: ID of track for which we want to grab data.
+    :type track_id: str
+
+    Return
+    ------
+    :return: Dictionary of audio features, see API documentation for fields.
+    :rtype: dict
+    """
     url = f"https://api.spotify.com/v1/audio-features/{track_id}"
     headers = get_auth_header(token)
     result = get(url, headers=headers)
     return json.loads(result.content)
 
 
-def get_recently_played_with_audio_fearures(token, starting_date, limit=50):
-    """Notice that one cannot specify both after and before.
-    I need a storage system for songs during the week. Spotify only saves the last 50 songs, so I need to make sure
-    that I constantly save songs based on the timestamp of when they were `played_at`. The minimal information I need to
-    store is the song id, artist id, and played_at. With these three information I can then gain access to the artist
-    genres as well as other things, such as mood.
+def get_recently_played_with_audio_features(token: str, starting_date: datetime.datetime, limit: int = 50):
+    """Grabs specific fields of recently played songs. Currently, we only grab track ID, track name, track artist name,
+    track artist id, track duration (in millisecond), and time at which song was played at (UTC).
 
-    The way I store this information is crucial because it should allow me to be as efficient as possible with checking
-    if I have downloaded new songs or not. I should check if it is possible to have timestamps as dictionary keys, and
-    importantly I should check that this works as expected using the `datetime` module.
+    Parameters
+    ----------
 
-    Seems to be working. Should be enough to store songs in the dictionary based on the played_at value.
+    :param token: Spotify API authorization token.
+    :type token: str
+    :param starting_date: Date from which we want to grab data from, typically will be start of the current week.
+    :type starting_date: datetime
+    :param limit: Limit of songs fetched from the API from starting date. Currently, the Spotify API only stores the
+    last 50 songs.
+    :type limit: int
+
+    Return
+    ------
+    :return: Dictionary containing information about recently played songs.
+    :rtype: dict
     """
     # Build the query using fields, limit and after
     url = "https://api.spotify.com/v1/me/player/recently-played"
@@ -118,16 +141,10 @@ def get_recently_played_with_audio_fearures(token, starting_date, limit=50):
     # GET request and extract results
     headers = get_auth_header(token)
     result = get(query_url, headers=headers)
-    json_result = json.loads(result.content)["items"]
-    # For each result, find audio features
-    
-    recently_played_songs = json_result
-
-    print(recently_played_songs[0])
-
-    return recently_played_songs
+    return json.loads(result.content)["items"]
 
 
 if __name__ == "__main__":
     access_token = get_token()
-    start_date = datetime(2023, 9, 17)
+    start_date = datetime.datetime(2023, 9, 17)
+    recent_songs = get_recently_played_with_audio_features(access_token, start_date)
