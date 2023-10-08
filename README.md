@@ -1,7 +1,3 @@
-<div align='center'>
-<img src="spotify-black.png" alt="drawing" width="400"/>
-</div>
-
 # Spotify Wrapped Weekly
 Using Python to grab recently played songs from Spotify API and Charts.js to display a SpotifyWrapped.
 
