@@ -281,6 +281,11 @@ footer {
     -webkit-text-fill-color: transparent; /* Hide text fill to show gradient */
 }
 
+#my_dataviz {
+    /*width: 100%; /*250px; /* simulate mobile */
+    height: 100%;
+}
+
 
 @media (max-width: 500px) { /* 500 should be enough for mobile */
     body {
@@ -379,12 +384,14 @@ footer {
         text-align: center;
     }
 
-    .circular-barplot-container{
+/*    .circular-barplot-container{
         width: 90%;
         display: flex;
         justify-content: center;
         font-size: 10px;
-    }
+        transform: scale(0.8);
+
+    }*/
 }
 
 

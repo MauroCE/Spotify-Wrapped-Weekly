@@ -1,62 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7V7S9EGG44"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-7V7S9EGG44');
+    </script>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recently Played Songs</title>
+    <title>Spotify Wrapped Weekly</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <!-- Include the Chart.js library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fontsource-circular-std@3.0.0-alpha.50/css/circular.css">
-    <style>
-        /* Center the title and pie chart on the page vertically and horizontally */
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-height: 100vh; /* Set a minimum height for the page */
-            align-items: center;
-            margin: 0;
-            font-family: 'Circular', sans-serif;
-        }
-
-        h1 {
-            margin-bottom: 10px; /* Add some spacing between the title and pie chart */
-            margin-top: 5px;
-        }
-
-        /* Style for the pie chart container */
-        .chart-container {
-            width: 80%; /* Adjust the width as needed */
-            max-width: 600px; /* Set a maximum width for responsiveness */
-            text-align: center; /* Center the chart */
-            margin-bottom: 20px; /* Add spacing between the charts */
-        }
-    </style>
+    <!-- <link href="https://fonts.cdnfonts.com/css/gotham-6" rel="stylesheet"> -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cf-gotham-fonts@1.0.0/gotham-font.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@MauroCamaraE">
+    <meta name="twitter:title" content="Spotify Wrapped Weekly">
+    <meta name="twitter:description" content="Real-time weekly insight on your Spotify trends.">
+    <meta name="twitter:image" content="https://spotify-mood-ring-2a2e81fbe0b0.herokuapp.com/static/twitter_thumbnail.png">
+    <!-- D3 -->
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3-scale-radial.js"></script>
 </head>
 <body>
-    <h1>This week's Spotify Listening Data</h1>
-    <p>Week start: {{ start_date.strftime('%Y-%m-%d') }}</p>
+    <header>
+        <div class="main-title">Spotify Wrapped Weekly</div>
+    </header>
+    <!-- <h1>SPOTIFY WRAPPED WEEKLY</h1> -->
+    <!-- <p>Week start: {{ start_date.strftime('%Y-%m-%d') }}  Number of songs: {{ n_songs }}  Total playtime: {{ total_playtime }} min </p> -->
+
+    <!-- TOP ARTISTS -->
+    <h2 class="section-title">TOP ARTISTS</h2>
+    <div class="top-artists-container" style="margin-top: 0px">
+        <div class="top-artists">
+            {% for artist in top_artists %}
+            <div class="artist-card">
+                <!-- Get the artist image URL from the dictionary using the artist's name as the key -->
+                {% set artist_image_url = top_artists_images_by_name.get(artist) %}
+                <div class="artist-rank">#{{ loop.index }}</div>
+                <div class="artist-image">
+                    <!-- Use the artist_image_url obtained from the dictionary -->
+                    <img src="{{ artist_image_url }}" alt="Artist Image">
+                </div>
+                <div class="artist-name">{{ artist }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- TOP GENRES -->
+    <h2 class="section-title" style="display: block; font-family: 'Gotham', sans-serif; margin-bottom: 0px;">TOP GENRES</h2>
+    <div class="genre-container">
+        <div class="top-artists"> <!-- THIS IS FOR TOP GENRES -->
+            {% for genre in top_genres %}
+            <div class="artist-card" style="background-color: {{ genre_colors[loop.index0] }};">
+                <div class="genre-rank" style="color: #FFFFFF;">#{{ loop.index }}</div>
+                <div class="genre-name">{{ genre }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <h2 class="section-title" style="display: block; margin-bottom: 10px;">STATS</h2>
+    <div class="stats-container">
+        <div class="stats-card" style="margin-bottom: 30px;">
+            <div class="stat-item">
+                <div class="stat-label">Minutes</div>
+                <div class="stat-value">{{ total_playtime }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Songs</div>
+                <div class="stat-value">{{ n_songs }}</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Hipster Score</div>
+                <div class="stat-value">{{ hipster_score }} %</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Week Start</div>
+                <div class="stat-value">{{ start_date.strftime('%d-%m-%y') }}</div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Create a placeholder for the pie chart -->
+    <h2 class="section-title" style="display: block; margin-bottom: 10px;">ARTIST PIE CHART</h2>
     <div class="chart-container">
         <canvas id="myPieChart"></canvas>
     </div>
 
     <!-- Create a placeholder for the time distribution chart -->
-    <div class="chart-container" style="height: 200px">
-        <canvas id="timeDistributionChart"></canvas>
-    </div>
+<!--    <div class="chart-container" style="height: 200px">-->
+<!--        <canvas id="timeDistributionChart"></canvas>-->
+<!--    </div>-->
 
-    <!-- Create a placeholder for the genre distribution chart -->
+    <!-- Circular time distribution -->
+    <h2 class="section-title" style="display: block; margin-bottom: 10px;">HOURLY DISTRIBUTION</h2>
+    <div id="my_dataviz" style="width: 100%; height: auto; max-width: 460px; aspect-ratio:1 / 1;"></div> <!-- class="circular-barplot-container"></div> -->
+
+<!--    &lt;!&ndash; Create a placeholder for the genre distribution chart &ndash;&gt;
     <div class="chart-container" style="height: 1000px">
         <canvas id="genreDistributionChart"></canvas>
-    </div>
+    </div>-->
+
+<!--    &lt;!&ndash; Create a placeholder for the radial bar chart &ndash;&gt;
+    <div class="chart-container" style="height: 400px">
+        <canvas id="radialBarChart"></canvas>
+    </div>-->
 
     <!-- JavaScript code to create the pie chart with dynamically generated colors -->
     <script>
         var ctx = document.getElementById('myPieChart').getContext('2d');
-        var artistData = {{ artist_data|tojson }};
-        var artistNames = artistData.map(function(artist) { return artist.artist; });
+        var artistCounts = {{ artist_counts|tojson }};
+        var artistNames = Object.keys(artistCounts);
+        var songCounts = Object.values(artistCounts);
+
         var uniqueColors = generateUniqueColors(artistNames.length);
 
         var myPieChart = new Chart(ctx, {
@@ -64,7 +133,7 @@
             data: {
                 labels: artistNames,
                 datasets: [{
-                    data: artistData.map(function(artist) { return artist.songs.length; }),
+                    data: songCounts,
                     backgroundColor: uniqueColors,
                 }]
             },
@@ -72,8 +141,19 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 legend: {
+                    display: true,
                     position: 'bottom',
+                    labels: {
+                        fontColor: '#fff',
+                    }
                 },
+                title: {
+                    display: true,
+                    text: 'Top Artists',
+                    fontColor: '#1DB954',
+                    fontSize: 16,
+                    fontStyle: 'bold'
+                }
             }
         });
 
@@ -88,50 +168,87 @@
     </script>
 
     <!-- JavaScript code to create the time distribution chart -->
+<!--    <script>-->
+<!--        var ctxTimeDistribution = document.getElementById('timeDistributionChart').getContext('2d');-->
+<!--        var timeDistributionData = {{ time_distribution_data|tojson }};-->
+<!--        var timeLabels = Array.from({ length: 24 }, (_, i) => i.toString() + ":00");-->
+
+<!--        var timeDistributionChart = new Chart(ctxTimeDistribution, {-->
+<!--            type: 'bar',-->
+<!--            data: {-->
+<!--                labels: timeLabels,-->
+<!--                datasets: [{-->
+<!--                    label: 'Listening Times',-->
+<!--                    data: timeDistributionData,-->
+<!--                    backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue color for bars-->
+<!--                    borderColor: 'rgba(54, 162, 235, 1)',-->
+<!--                    borderWidth: 1,-->
+<!--                }]-->
+<!--            },-->
+<!--            options: {-->
+<!--                responsive: true,-->
+<!--                maintainAspectRatio: false,-->
+<!--                scales: {-->
+<!--                    x: {-->
+<!--                        beginAtZero: true,-->
+<!--                        title: {-->
+<!--                            display: true,-->
+<!--                            text: 'Hour of the Day'-->
+<!--                        }-->
+<!--                    },-->
+<!--                    y: {-->
+<!--                        beginAtZero: true,-->
+<!--                        title: {-->
+<!--                            display: true,-->
+<!--                            text: 'Number of Songs'-->
+<!--                        }-->
+<!--                    }-->
+<!--                },-->
+<!--                legend: {-->
+<!--                    display: false,-->
+<!--                },-->
+<!--            }-->
+<!--        });-->
+<!--    </script>-->
+
+<!--    &lt;!&ndash; JavaScript code to create the radial bar chart &ndash;&gt;
     <script>
-        var ctxTimeDistribution = document.getElementById('timeDistributionChart').getContext('2d');
+        var ctxRadialBar = document.getElementById('radialBarChart').getContext('2d');
         var timeDistributionData = {{ time_distribution_data|tojson }};
         var timeLabels = Array.from({ length: 24 }, (_, i) => i.toString() + ":00");
 
-        var timeDistributionChart = new Chart(ctxTimeDistribution, {
-            type: 'bar',
+        // Create a polar area chart
+        var radialBarChart = new Chart(ctxRadialBar, {
+            type: 'polarArea',
             data: {
                 labels: timeLabels,
                 datasets: [{
-                    label: 'Listening Times',
                     data: timeDistributionData,
                     backgroundColor: 'rgba(54, 162, 235, 0.7)', // Blue color for bars
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1,
-                }]
+                    label: 'Number of Songs',
+                }],
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    x: {
+                    r: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Hour of the Day'
-                        }
                     },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Number of Songs'
-                        }
-                    }
                 },
-                legend: {
-                    display: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
                 },
-            }
+            },
         });
-    </script>
+    </script>-->
 
-    <!-- JavaScript code to create the genre distribution chart -->
+
+<!--    &lt;!&ndash; JavaScript code to create the genre distribution chart &ndash;&gt;
     <script>
         var ctxGenreDistribution = document.getElementById('genreDistributionChart').getContext('2d');
         var genreData = {{ genre_data|safe }};
@@ -205,9 +322,151 @@
                 },
             }
         });
+    </script>-->
+
+    <!-- Circular time distribution histogram -->
+<!--    <script>
+    // set the dimensions and margins of the graph
+    var margin = {top: 0, right: 10, bottom: 30, left: 10},
+        width = 460 - margin.left - margin.right,
+        height = 460 - margin.top - margin.bottom,
+        innerRadius = 90,
+        outerRadius = Math.min(width, height) / 2;   // the outerRadius goes from the middle of the SVG area to the border
+
+    // append the svg object
+    var svg = d3.select("#my_dataviz")
+      .append("svg")
+         .attr("width", width + margin.left + margin.right)
+         .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", "translate(" + (width / 2 + margin.left) + "," + (height / 2 + margin.top) + ")");
+
+    d3.csv("static/time_distribution.csv", function(data) {
+
+      var maxCount = d3.max(data, function(d) { return +d.count; });
+
+      // Scales
+      var x = d3.scaleBand()
+          .range([0, 2 * Math.PI])    // X axis goes from 0 to 2pi = all around the circle. If I stop at 1Pi, it will be around a half circle
+          .align(0)                  // This does nothing
+          .domain(data.map(function(d) { return d.hour; })); // The domain of the X axis is the list of states.
+      var y = d3.scaleRadial()
+          .range([innerRadius, outerRadius])   // Domain will be define later.
+          .domain([0, maxCount]); // Domain of Y is from 0 to the max seen in the data
+
+      // Add the bars
+      svg.append("g")
+        .selectAll("path")
+        .data(data)
+        .enter()
+        .append("path")
+          .attr("fill", "#1DB954")
+          .attr("stroke", "black")
+          .attr("stroke-width", 3) // Set the border width
+          .attr("d", d3.arc()     // imagine your doing a part of a donut plot
+              .innerRadius(innerRadius)
+              .outerRadius(function(d) { return y(d['count']); })
+              .startAngle(function(d) { return x(d.hour); })
+              .endAngle(function(d) { return x(d.hour) + x.bandwidth(); })
+              .padAngle(0.01)
+              .padRadius(innerRadius))
+
+      // Add the labels
+      svg.append("g")
+          .selectAll("g")
+          .data(data)
+          .enter()
+          .append("g")
+            .attr("text-anchor", function(d) { return (x(d.hour) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? "end" : "start"; })
+            .attr("transform", function(d) { return "rotate(" + ((x(d.hour) + x.bandwidth() / 2) * 180 / Math.PI - 90) + ")"+"translate(" + (y(d['count'])+10) + ",0)"; })
+          .append("text")
+            .text(function(d){return(d.hour)})
+            .attr("transform", function(d) { return (x(d.hour) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? "rotate(180)" : "rotate(0)"; })
+            .style("font-size", "15px")
+            .style("font-family", "Gotham")
+            .style("font-weight", "500")
+            .attr("alignment-baseline", "middle")
+
+    });
+    </script>-->
+
+    <script>
+    // set the dimensions and margins of the graph
+    var margin = {top: 0, right: 10, bottom: 30, left: 10},
+        width = 460 - margin.left - margin.right,
+        height = 460 - margin.top - margin.bottom,
+        innerRadius = 90,
+        outerRadius = Math.min(width, height) / 2;   // the outerRadius goes from the middle of the SVG area to the border
+
+    // append the svg object
+    var svg = d3.select("#my_dataviz")
+      .append("svg")
+         .attr("width", width + margin.left + margin.right)
+         .attr("height", height + margin.top + margin.bottom)
+         /// ----------------------------------------------------
+         .attr("viewBox", "0 0 460 460")
+         .attr("preserveAspectRatio", "xMidYMid meet")
+         .style("max-width", "100%")
+         /// ----------------------------------------------------
+      .append("g")
+        .attr("transform", "translate(" + (width / 2 + margin.left) + "," + (height / 2 + margin.top) + ")");
+
+    d3.csv("static/time_distribution.csv", function(data) {
+
+      var maxCount = d3.max(data, function(d) { return +d.count; });
+
+      // Scales
+      var x = d3.scaleBand()
+          .range([0, 2 * Math.PI])    // X axis goes from 0 to 2pi = all around the circle. If I stop at 1Pi, it will be around a half circle
+          .align(0)                  // This does nothing
+          .domain(data.map(function(d) { return d.hour; })); // The domain of the X axis is the list of states.
+      var y = d3.scaleRadial()
+          .range([innerRadius, outerRadius])   // Domain will be define later.
+          .domain([0, maxCount]); // Domain of Y is from 0 to the max seen in the data
+
+      // Add the bars
+      svg.append("g")
+        .selectAll("path")
+        .data(data)
+        .enter()
+        .append("path")
+          .attr("fill", "#1DB954")
+          .attr("stroke", "black")
+          .attr("stroke-width", 3) // Set the border width
+          .attr("d", d3.arc()     // imagine your doing a part of a donut plot
+              .innerRadius(innerRadius)
+              .outerRadius(function(d) { return y(d['count']); })
+              .startAngle(function(d) { return x(d.hour); })
+              .endAngle(function(d) { return x(d.hour) + x.bandwidth(); })
+              .padAngle(0.01)
+              .padRadius(innerRadius))
+
+      // Add the labels
+      svg.append("g")
+          .selectAll("g")
+          .data(data)
+          .enter()
+          .append("g")
+            .attr("text-anchor", function(d) { return (x(d.hour) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? "end" : "start"; })
+            .attr("transform", function(d) { return "rotate(" + ((x(d.hour) + x.bandwidth() / 2) * 180 / Math.PI - 90) + ")"+"translate(" + (y(d['count'])+10) + ",0)"; })
+          .append("text")
+            .text(function(d){return(d.hour)})
+            .attr("transform", function(d) { return (x(d.hour) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? "rotate(180)" : "rotate(0)"; })
+            .style("font-size", "15px")
+            .style("font-family", "Gotham, sans-serif")
+            .style("font-weight", "500")
+            .attr("alignment-baseline", "middle")
+
+    });
     </script>
 
 
-
+    <footer>
+        <div class="social-links">
+            <a class="github-link" href="https://github.com/MauroCE/Spotify-Wrapped-Weekly"><i class="fab fa-github"></i></a>
+            <a href="https://twitter.com/MauroCamaraE"><i class="fab fa-twitter"></i></a>
+        </div>
+        <p class="copyright" styles="margin-top: 20px;">&copy; 2023 www.maurocamaraescudero.netlify.app</p>
+    </footer>
 </body>
 </html>

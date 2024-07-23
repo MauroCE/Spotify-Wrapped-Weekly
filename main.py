@@ -40,7 +40,7 @@ def get_token():
         }
         authorization_url = auth_url + "?" + "&".join([f"{k}={v}" for k, v in auth_params.items()])
 
-        print("Please visit the following URL to authorize your application:")
+        print("Please visit the following URL to authorize your application:", authorization_url)
 
         # After user authorization, you will receive an authorization code
         authorization_code = input("Enter the authorization code from the URL: ")
